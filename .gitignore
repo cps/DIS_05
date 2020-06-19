@@ -1,0 +1,5 @@
+*.zip
+/bin
+/target/
+*.userlibraries
+/src/data/movies.json
