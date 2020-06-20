@@ -2,11 +2,10 @@ package logic;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
+import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import org.bson.BsonType;
@@ -52,7 +51,7 @@ public class MovieService extends MovieServiceBase {
 	public MovieService() {
 		// DONE see for example https://mongodb.github.io/mongo-java-driver/3.12/driver/tutorials/
 		// DONE: connect to MongoDB
-		 mongo = MongoClients.create("mongodb://localhost:27017");
+		 mongo = MongoClients.create("mongodb://root:password@localhost:27017");
 		// DONE Select database "imdb"
 		 db = mongo.getDatabase("imdb");
 		// Create a GriFS FileSystem Object using the db
@@ -167,9 +166,9 @@ public class MovieService extends MovieServiceBase {
 	 *            the comment to save
 	 */
 	public void saveMovieComment(String id, String comment) {
-		// TODO implement
-		Document query = null;
-		Document update = null;
+		// DONE
+		Document query = new Document("_id", id);
+		Document update = new Document("$set", new Document("comment", comment));
 		movies.updateOne(query, update);
 	}
 
@@ -199,9 +198,11 @@ public class MovieService extends MovieServiceBase {
 	 * @return the FindIterable for the query
 	 */
 	public FindIterable getByTweetsKeywordRegex(String keyword, int limit) {
-		//TODO : implement
-		FindIterable<Document>  result = null;
-		return result;
+		//DONE
+		Document movieQuery = new Document("tweets", new Document("$elemMatch", new Document("text", Pattern.compile(".*" + keyword + ".*"))));
+		FindIterable<Document>  movieResult = movies.find(movieQuery).limit(limit);
+
+		return movieResult;
 	}
 
 	/**
@@ -268,8 +269,8 @@ public class MovieService extends MovieServiceBase {
 	 */
 	public void saveFile(String name, InputStream inputStream, String contentType) {
 		GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(358400).metadata(new Document("contentType", contentType));
-		// TODO IMPLEMENT
-	    ObjectId fileId = null; 
+		// DONE
+	    ObjectId fileId = fs.uploadFromStream(name, inputStream, options);
 	}
 
 	/**
@@ -281,10 +282,13 @@ public class MovieService extends MovieServiceBase {
 	 * @return The retrieved GridFS File
 	 */
 	public GridFSFile getFile(String name) {
-		// TODO: Implement
-		GridFSFile file = null;
+		// DONE
+		GridFSFindIterable iterable = fs.find(eq("filename", "sample.png"));
+		GridFSFile defaultFile = iterable.first();
+		iterable = fs.find(eq("filename", name));
+		GridFSFile file = iterable.first();
 		if (file == null) {
-			file = null;
+			file = defaultFile;
 		}
 		return file;
 	}
